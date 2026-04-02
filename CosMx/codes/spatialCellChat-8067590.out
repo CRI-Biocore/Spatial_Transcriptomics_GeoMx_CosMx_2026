@@ -1,0 +1,42 @@
+Using conda environment: /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/seurat_spatial
+[1] "/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/seurat_spatial/lib/R/library"
+[1] "Starting script at: 2026-03-31 23:45:28.294263"
+An object of class Seurat 
+20334 features across 2666 samples within 1 assay 
+Active assay: RNA (20334 features, 0 variable features)
+ 2 layers present: counts, data
+[1] "Starting CellChat analysis at: 2026-03-31 23:45:52.041601"
+ℹ Create a SpatialCellChat object from a Seurat object.
+The `meta.data` slot in the Seurat object is used as cell meta information 
+Create a SpatialCellChat object from spatial imaging data... 
+Set cell identities for the new SpatialCellChat object 
+The cell groups used for SpatialCellChat analysis are  Endothelial cells Epithelial cells LummHR-SCGB Lumsec-prol Macrophages Plasma cells 
+ℹ Pre-processing from a SpatialCellChat object.
+✔ Pre-processing is done.
+[1] "Pre-processing completed at: 2026-03-31 23:45:54.334495"
+>>>  Choose spatially variable features using 'MERINGUE' method... 
+>>>  The number of highly variable features is 310 
+[1] "Over-expressed genes identified at: 2026-03-31 23:46:41.110375"
+ℹ Future strategy in use: `sequential`
+>>>  The number of highly variable ligand-receptor pairs used for signaling inference is 467 
+>>>  Analyzing spatial transcriptomic data and preferring to infer interactions between individual cells...
+>>>  Apply a predefined spatial distance threshold based on the interaction length(=250um)...
+>>> Contact range is set as 10um, to restrict the contact-dependent signaling.
+>>> Run CellChat on spatial transcriptomic data using distances as constraints <<< [2026-03-31 23:46:43.780755]
+>>>  All the input L-R pairs are `Cell-Cell Contact` signaling. Run CellChat in a contact-dependent manner. 
+ℹ Future strategy in use: `sequential`
+>>>  The number of cells and L-R pairs in Dim(Prob.cell): 2666 2666 467 
+✔ CellChat inference is done. Parameter values are stored in `object@options$parameter` <<< [2026-03-31 23:53:19.139267]
+[1] "Communication probability computed at: 2026-03-31 23:53:19.139548"
+>>> Filter out non-significant communication with a probability quantile being 0.95 for each L-R pair... 
+ℹ Future strategy in use: `sequential`
+✔ Filtering is done.
+>>>  Filter communication according to min.links...
+>>>  Filter communication according to min.cell.sr... 
+✔Filtering cell-cell communication is done.<<< [2026-03-31 23:56:34.514446]
+[1] "Filtered communication network at: 2026-03-31 23:56:34.514678"
+>>>  Compute the communication probability between cell groups at signaling pathway level by summarizing all related ligands/receptors...
+>>>  Compute the communication probability between individual cells at signaling pathway level by summarizing all related ligands/receptors...
+>>>  Subset the pathways with non-zero communication probability and arrange them in a decreasing order based on the total communication probabilities ...
+>>>  The number of cells and pathways in Dim(prob.cell.pathways) are : 2666 2666 81 
+✔ Computing the communication probability on signaling pathway level is done. 

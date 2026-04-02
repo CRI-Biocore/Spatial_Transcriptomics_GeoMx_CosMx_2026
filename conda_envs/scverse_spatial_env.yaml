@@ -1,0 +1,61 @@
+## module load miniconda3/23.1.0
+## mamba env create -f scverse_spatial_env.yaml -p ./conda_envs/scverse_spatial
+## 
+## python -m ipykernel install --user --name scverse-nb --display-name "Python (scverse)"
+name: scverse_spatial
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - jupyterlab
+  - ipykernel
+  - pip:
+    # --- Core scverse ---
+    - scanpy
+    - anndata
+    - mudata
+
+    # --- Spatial ---
+    - squidpy
+    - spatialdata
+    - spatialdata-io        # CosMx reader: spatialdata_io.cosmx()
+    - spatialdata-plot
+
+    # --- Integration & batch correction ---
+    - scvi-tools             # scVI, scANVI, totalVI
+    - harmonypy
+    - bbknn
+
+    # --- DE analysis ---
+    - pydeseq2               # DESeq2 in Python
+    - diffxpy
+
+    # --- Enrichment ---
+    - gseapy                 # GSEA, enrichr
+    - decoupler           # pathway & TF activity (PROGENy, CollecTRI)
+
+    # --- Cell type annotation ---
+    - celltypist             # automated annotation with pretrained models
+
+    # --- Trajectory & velocity ---
+    # - scvelo
+    #- cellrank
+
+    # --- Doublet detection ---
+    - scrublet
+
+   # --- Cell-cell communication ---
+    - cellphonedb
+
+
+    # --- General ---
+    - pandas
+    - numpy
+    - scipy
+    - matplotlib
+    - seaborn
+    - leidenalg
+    - python-igraph
+    - session-info           # reproducibility: log package versions

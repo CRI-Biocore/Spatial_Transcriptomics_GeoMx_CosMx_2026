@@ -1,0 +1,55 @@
+## Conda environment for GeoMx DSP analysis
+## Minimal conda base — all R packages installed via BiocManager/CRAN inside R
+## to avoid bioconda dependency conflicts.
+## ── Step 1: Create the environment ───────────────────────────────────────────
+##   module load miniconda3/23.1.0
+##    mamba env create -f ./conda_envs/geomx_env.yaml \
+##       -p ./conda_envs/geomx_env
+##
+## ── Step 2: Install R packages (okay in login node) ──────────
+##   conda activate .../conda_envs/geomx_env
+##   Rscript geomx_Rpackages_install.R
+##
+## ── Step 3: Register Jupyter kernel in R──────────────────────────────────────────
+##   IRkernel::installspec(
+##    name='geomx_env', 
+##    displayname='R (geomx_env)', 
+##    rprofile = "/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/geomx_env/lib/R/library/geomx_rprofile.R")
+## ─────────────────────────────────────────────────────────────────────────────
+
+name: geomx_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.3
+  - jupyter
+  - notebook
+
+  # --- Minimal R tooling to bootstrap package installation ---
+  - r-irkernel
+  - r-devtools
+  - r-tidyverse
+  - r-biocmanager
+  - r-rmarkdown
+  - r-knitr
+
+  # --- Pre-compiled C-library dependencies (required for GeomxTools chain) ---
+  - r-rcurl                       # needs libcurl — required by GenomeInfoDb → Biostrings
+  - r-nloptr                      # needs NLopt C lib — required by lme4 → lmerTest
+  - r-lme4                        # depends on nloptr; install via conda to ensure correct linkage
+  - r-v8                          # V8 JS engine — required by ggiraph
+  - r-ggiraph                     # pre-built binary — required by NanoStringNCTools → GeomxTools
+  - bioconductor-xvector          # required by Biostrings
+  - bioconductor-genomeinfodb     # required by Biostrings
+  - bioconductor-biostrings       # required by NanoStringNCTools → GeomxTools
+  - bioconductor-complexheatmap   # pre-built binary
+  - bioconductor-spatialexperiment
+  - r-magick                      # needs ImageMagick system lib
+  - r-png                         # needs libpng system lib
+  - r-igraph                      # needs C libraries
+  - r-data.table                  # needs C compiler
+  - r-reticulate                  # needs Python linkage
+  - r-networkd3
+  - r-umap                        # depends on reticulate

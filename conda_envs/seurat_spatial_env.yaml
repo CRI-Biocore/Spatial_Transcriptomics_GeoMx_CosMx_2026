@@ -1,0 +1,75 @@
+## Create the environment:
+##   module load miniconda3/23.1.0
+##   mamba env create -f ./conda_envs/seurat_spatial_env.yaml -p ./conda_envs/seurat_spatial
+##
+## ── Post-install in R (order matters) ────────────────────────────────────────────────────────
+##   Open R inside the env:
+##     conda run --prefix .../seurat_spatial R
+##   Register Jupyter kernel (run after env creation): in R. (Explicit profile needed for Randi, to avoid packages conflicts)
+##   IRkernel::installspec(
+##    name='seurat_spatial', 
+##    displayname='R (seurat_spatial)', 
+##    rprofile = "/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/seurat_spatial/lib/R/library/seurat_rprofile.R")
+##
+##   # NMF from CRAN — conda-forge version too old (0.21); SpatialCellChat requires >= 0.23
+##   install.packages("NMF")
+##
+##   # MERINGUE — spatially variable gene detection
+##   devtools::install_github("JEFworks-Lab/MERINGUE", upgrade = "never")
+##
+##   # ALRA — imputation via adaptively-thresholded low-rank approximation
+##   wget https://github.com/KlugerLab/ALRA/archive/refs/heads/master.tar.gz -O ALRA.tar.gz ## Outside of R.
+##   Run in an interactive session, 20GB.
+##   devtools::install_local("ALRA.tar.gz", upgrade = "never")
+##
+##   # SpatialCellChat (install last — depends on NMF, MERINGUE, ALRA above)
+##   devtools::install_github("jinworks/SpatialCellChat", upgrade = "never")
+##   devtools::install_github("jinworks/CellChat", upgrade = "never")
+##
+## ──────────────────────────────────────────────────────────────────────────────────────────────
+
+name: seurat_spatial
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.3
+  - jupyter
+  - notebook
+
+  # --- R core ---
+  - r-seurat
+  - r-devtools
+  - r-tidyverse
+  - r-irkernel
+  - r-biocmanager
+
+  # --- Seurat / CellChat / SpatialCellChat conda-installable dependencies ---
+  - r-matrix
+  - r-rcpp
+  - r-rcpparmadillo
+  - r-rcppml                      # fast NMF/projections used by SpatialCellChat
+  # r-nmf excluded — conda-forge version (0.21) is too old; SpatialCellChat requires >= 0.23
+  # Install from CRAN in R post-install: install.packages("NMF")
+  - r-nnls                        # non-negative least squares (CellChat signaling inference)
+  - r-future                      # parallel processing
+  - r-future.apply
+  - r-igraph                      # graph/network analysis
+  - r-spdep                       # spatial weights matrix (SpatialCellChat spatial tests)
+  - bioconductor-biocneighbors    # fast k-NN (MERINGUE, SpatialCellChat)
+  - bioconductor-biobase          # required by NMF (not on CRAN)
+  - bioconductor-complexheatmap   # heatmaps for CellChat/SpatialCellChat output
+  - r-circlize                    # chord diagrams (CellChat bubble/chord plots)
+  - r-lme4                        # required by pbkrtest → car → rstatix → ggpubr chain
+  - r-ggpubr                      # direct SpatialCellChat dependency
+
+  # --- Visualization ---
+  - r-ggplot2
+  - r-patchwork
+  - r-cowplot
+
+  # --- General utilities ---
+  - r-data.table
+  - r-irlba                       # sparse SVD — used by MERINGUE and Seurat
+  - r-rann                        # fast approximate nearest neighbors (MERINGUE)
