@@ -1,7 +1,6 @@
 # 4_cosmx_spatial_cell_com.R
-## This 
+## This script performs spatial cell-cell communication analysis using the SpatialCellChat package.
 
-## s_interactive --mem=150GB --partition=caslake 
 ## srun --time=04:00:00 --mem=180G -p tier2q  --pty bash -I 
 ## conda activate /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/seurat_spatial
 ## R --vanilla
@@ -26,47 +25,23 @@ library(Matrix)
 library(patchwork)
 
 ## PATHS
-w_dir = "/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2"
-in_dir =  file.path(w_dir, 'CosMx/results/BreastCancer/Subset_MM')
-out_dir = file.path(w_dir, 'CosMx/results/BreastCancer/SpatialCellChat')
+out_dir = "/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/CosMx/results/SpatialCellChat"
 dir.create(out_dir, showWarnings = F)
+
+## FILES AND PARAMETERS
+seurat_file = file.path(out_dir, "seurat_obj_subset_SpatialCellChat.rds") ## This dataset was produced in the first section, prepare seurat obj from 4
+ct_col = "cell_type"
 
 ## Print starting time. 
 start_time = Sys.time()
 print(paste("Starting script at:", Sys.time()))
 
 ############
-## Create seurat object with Subset data. 
-############
-
-# 1. Load counts and create base object
-## Read mtx file directly 
-counts = readMM(file.path(in_dir, "matrix.mtx"))
-barcodes = read.table(file.path(in_dir, "barcodes.tsv"), header = FALSE)$V1
-features = read.table(file.path(in_dir, "features.tsv"), header = FALSE, sep = "\t")
-
-rownames(counts) = features$V2  # gene names (col 2), or V1 for IDs
-colnames(counts) = barcodes
-
-seurat_obj = CreateSeuratObject(counts = counts)
-
-# 2. Add cell metadata (with annotations)
-metadata = read.csv(file.path(in_dir, "metadata_annotation.csv"), row.names = 1)
-seurat_obj = AddMetaData(seurat_obj, metadata)
-
-## SUBSET - TESTING SCRIPT ONLY.
-seurat_obj = subset(seurat_obj, CenterX_global_px > 35000  & CenterY_global_px < 98000)
-
-saveRDS(seurat_obj, file = file.path(out_dir, "seurat_obj_subset_SpatialCellChat.rds"))
-
-## 3. Normalize data
-seurat_obj = NormalizeData(seurat_obj)
-
-print(seurat_obj)
-
-############
 ## Create CellChat object and identify over-expressed genes and interactions
 ############
+
+## Read in Seurat object.
+seurat_obj = readRDS(file = seurat_file)
 
 print(paste("Starting CellChat analysis at:", Sys.time()))
 
@@ -85,7 +60,7 @@ spatial.factors = data.frame(ratio = conversion.factor, tol = spot.size/2)
 ## 2. Create Spatial CellChat obj. 
 chat = createSpatialCellChat(
     object = seurat_obj, 
-    group.by = "final_annotation", 
+    group.by = ct_col, 
     assay = "RNA", 
     datatype = "spatial",
     coordinates = spatial_coords, 
@@ -127,7 +102,7 @@ chat = computeCommunProb(
   chat,
   distance.use = TRUE, 
   scale.distance = 1,  ## 1-1 Since CosMx is already adjusted to micrometers. 
-  #contact.dependent = TRUE,
+  contact.dependent = TRUE,
   interaction.range = 250, ## Based on expected micrometers range - paracrine signaling. 
   contact.range = 10 ## Based on expected micrometers range - juxtacrine/contatc-dependent signaling.
 )
@@ -146,26 +121,44 @@ chat = filterCommunication(
 
 print(paste("Filtered communication network at:", Sys.time()))
 
-saveRDS(chat, file = file.path(out_dir, "SpatialCellChat.rds"))
+# saveRDS(chat, file = file.path(out_dir, "SpatialCellChat.rds"))
+
+##  Infer network at cell-group level. 
+chat = computeAvgCommunProb(
+  chat,
+  avg.type = 'avg',
+  nboot = 100,
+  do.permutation = T
+)
+## Filter based on number of cells supporting the interaction.
+chat = filterCommunication(
+  chat, min.cells = NULL,
+  min.links = 10,
+  min.cells.sr = 10
+)
 
 ## Store cell-cell Communication df. 
-chat@LR$LRsig %>% write.csv(file.path(out_dir, "cell_cell_communication.csv"), row.names = F)
+subsetCommunication(chat) %>% write.csv(file.path(out_dir, "cell_cell_communication.csv"), row.names = F)
 
 
 ## Aggregate the cell-cell communication network.
 chat = computeCommunProbPathway(chat)
-
-saveRDS(chat, file = file.path(out_dir, "SpatialCellChat_communication.rds"))
-
-quit()
 
 ## Add pathway information. 
 chat = aggregateNet(chat)
 
 print(paste("Aggregated communication network at:", Sys.time()))
 
+## Network centrality. 
+chat = netAnalysis_computeCentrality(
+  chat,
+  slot.name = "net",
+  do.group = F,
+  degree.only = T
+)
+
 
 ## Print total time: 
 print(paste("Total time for script:", Sys.time() - start_time))
 
-saveRDS(chat, file = file.path(out_dir, "SpatialCellChat_expanded.rds"))
+saveRDS(chat, file = file.path(out_dir, "SpatialCellChat.rds"))
