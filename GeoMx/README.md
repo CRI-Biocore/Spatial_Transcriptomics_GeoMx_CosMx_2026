@@ -6,14 +6,14 @@
 
 ## Dataset
 
-> 📌 **Placeholder** — Replace with your dataset description.
->
-> *Example fields to include:*
-> - Source / publication
-> - Tissue type and condition (e.g., disease vs. healthy)
-> - Number of slides, ROIs/segments, AOI types
-> - Panel used (PKC file name, approximate gene count)
-> - Any preprocessing or simulation notes
+The dataset is the same used for the GeomxTools tutorial and is used throughout all the scripts for this workshop. FFPE and FF tissue sections from 4 diabetic kidney disease (DKD) and 3 healthy kidney sections [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/), processed using the GeoMx Digital Spatial Profiler (DSP) platform. The ROIs were selected to focus on tubules or glomeruli regions.
+
+ - Glomeruli: Each ROI defined as glomeruli contains a single glomerulus.
+
+ - Tubular: Each ROI contains multiple tubules and are further classified into distal (PanCK+) or proximal (PanCK-) AOIs.
+
+For this workshop, we simulated 3 columns: The number of nuclei and X and Y coordinates per ROI, since the initial data did not have these fields.
+
 
 ---
 
@@ -21,16 +21,10 @@
 
 | Topic | Notebook |
 |---|---|
-| Data loading — DCC, PKC, annotation Excel | `codes/1_geomx_setup_qc.ipynb` |
-| Segment QC — reads, saturation, nuclei, area, NTC | `codes/1_geomx_setup_qc.ipynb` |
-| Probe QC — low ratio and Grubbs outlier filtering | `codes/1_geomx_setup_qc.ipynb` |
-| Limit of Quantification (LOQ) and gene-level filtering | `codes/1_geomx_setup_qc.ipynb` |
-| Q3 normalization and PCA exploration | `codes/2_geomx_limma_norm_DE.ipynb` |
-| Differential expression — limma-voom + duplicateCorrelation | `codes/2_geomx_limma_norm_DE.ipynb` |
-| Volcano plot and DEG heatmaps | `codes/2_geomx_limma_norm_DE.ipynb` |
-| Background estimation from negative probes | `codes/3_geomx_SpatialDecon.ipynb` |
-| Cell-type deconvolution — SpatialDecon + reference matrix | `codes/3_geomx_SpatialDecon.ipynb` |
-| Cell abundance visualization — barplot and heatmap | `codes/3_geomx_SpatialDecon.ipynb` |
+| GeoMx obj from DCC, PKC data, QC and filtering with GeomxTools | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
+| Normalization, PCA and DE analysis with limma-voom | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
+| Cell-type deconvolution — SpatialDecon + Kidney HCA reference | `GeoMx/codes/3_geomx_SpatialDecon.ipynb` |
+
 
 ---
 
@@ -38,18 +32,15 @@
 
 **Environment:** `geomx_env` (R-based)
 
-```bash
-sbatch --mem=50GB ./launch_jupyter_conda.sh \
-  /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/geomx_env
-```
+All the command lines to run each notebook were ran from the main workshop directory, update as needed. The notebooks for this section can be executed with **10G** of memory or less. 
 
-Launch Jupyter from the **workshop root folder** — all paths inside the notebooks are relative to that location.
-
----
 
 ## Notebook 1 — Dataset Setup & QC
 
 **`GeoMx/codes/1_geomx_setup_qc.ipynb`**
+
+`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/1_geomx_setup_qc.ipynb  $my_output_dir` 
+
 
 ### Context
 
@@ -76,7 +67,6 @@ Key metadata columns kept in `meta_cols`: `Sample_ID`, `slide_name`, `region`, `
 
   The resulting `LOQ_Mat` (genes × segments boolean matrix) records whether each gene exceeds the per-segment noise floor. How is it used to define gene detection rates?
 - [ ] Segments with < 10% genes detected above LOQ are removed. Then genes detected in < 10% of remaining segments are filtered out, while `NegProbe-WTX` is explicitly retained. Confirm the final dimensions: the notebook targets ~10,028 genes and 201 segments.
-- [ ] Note all outputs in `GeoMx/results/`: `segment_metadata_QC.tsv`, `raw_counts.tsv`, `raw_features.tsv`, `raw_metadata.tsv`, `tidy_counts.tsv`, `tidy_features.tsv`, `tidy_metadata.tsv`, `tidy_geomx_obj.rds`, `tidy_spe_obj.rds`.
 
 ### Reflect
 
@@ -84,24 +74,15 @@ Key metadata columns kept in `meta_cols`: `Sample_ID`, `slide_name`, `region`, `
 > - The LOQ is computed per segment — why does this matter compared to applying a single global expression cutoff?
 > - How would you adjust the 10% gene detection threshold if your tissue had highly heterogeneous cell types where key markers are only expressed in a small fraction of segments?
 
-### 💡 Inspect Instead
-
-```r
-library(GeomxTools); library(tidyverse)
-
-target_data <- readRDS("GeoMx/results/tidy_geomx_obj.rds")
-dim(target_data)
-pData(target_data) %>% select(region, segment, class, GeneDetectionRate) %>% head()
-
-# QC summary
-read_tsv("GeoMx/results/segment_metadata_QC.tsv") %>% count(QCStatus, Flag)
-```
 
 ---
 
 ## Notebook 2 — Normalization & Differential Expression
 
 **`GeoMx/codes/2_geomx_limma_norm_DE.ipynb`**
+
+`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/2_geomx_limma_norm_DE.ipynb  my_output_dir` 
+
 
 ### Context
 
@@ -113,41 +94,26 @@ The design matrix `~0 + CellType + class:CellType` produces interaction coeffici
 
 ### Tasks
 
-- [ ] Load the counts and metadata from `GeoMx/results/`. Note how `CellType` is recoded from `segment`: `Geometric Segment` → `glomeruli`, `PanCK−` → `DistalTubules`, `PanCK+` → `ProximalTubules`. Why recode rather than use the raw column?
 - [ ] Examine the PCA biplots colored by `slide_name` and by `CellType + class`. Do slides cluster separately (visible batch effect)? Do the three cell types separate on PC1/PC2? Check PC3/PC4 as well.
 - [ ] Run `colnames(fit$coefficients)` and list all model terms. Identify which coefficient represents DKD vs. normal within glomeruli (`glomeruli_DKD`).
-- [ ] Understand why `duplicateCorrelation` is used instead of adding `slide_name` directly to the design. What does `corfit$consensus.correlation` measure? Values > 0.5 would call for a second round on residuals — check the actual value in this dataset.
-- [ ] Run `topTable()` for `glomeruli_DKD` with `number=Inf`. Apply cutoffs `adj.P.Val < 0.05` and `|logFC| ≥ log2(1.5)`. How many genes pass? Do any recognized disease-related genes appear in the top hits?
-- [ ] Interpret the volcano plot: dashed lines mark `logFC = ±0.59` (1.5-fold) and `-log10(adj.P.Val) = 1.3` (FDR 5%). Significant genes are labeled using `ggrepel`.
+- [ ] Understand why `duplicateCorrelation` is used instead of adding `slide_name` directly to the design. What does `corfit$consensus.correlation` measure?  Check the value in this dataset.
 - [ ] Compare the two heatmaps of the top 20 DEGs: raw `logCPM` vs. z-scored values. Which better reveals the expression pattern across samples?
-- [ ] Results are saved to `GeoMx/results/DE_glomeruli_DKDvsNormal.tsv`. Identify the three lines you would change to run DE for `ProximalTubules_DKD` or `DistalTubules_DKD`.
+- [ ] Results are saved to `GeoMx/results/DE_glomeruli_DKDvsNormal.tsv`. Update the code to run DE for `ProximalTubules_DKD` or `DistalTubules_DKD`.
 
 ### Reflect
 
 > - Why is Q3/upper-quartile normalization more appropriate for GeoMx than library-size (CPM) normalization?
 > - `duplicateCorrelation` treats slide as a random effect. When would you prefer a fixed-effect model? When would DESeq2 be the better choice?
-> - The design uses `~0 + CellType + class:CellType`. What is the advantage of this parameterization when you want to test the disease effect within one cell type at a time?
-> - If a gene is significantly DE in glomeruli but not in tubules, does that prove it is unaffected in tubules?
 
-### 💡 Inspect Instead
-
-```r
-library(tidyverse)
-
-de <- read_tsv("GeoMx/results/DE_glomeruli_DKDvsNormal.tsv")
-
-de %>%
-  filter(adj.P.Val < 0.05, abs(logFC) >= log2(1.5)) %>%
-  arrange(desc(abs(logFC))) %>%
-  select(Gene, logFC, adj.P.Val) %>%
-  head(20)
-```
 
 ---
 
 ## Notebook 3 — Cell-Type Deconvolution with SpatialDecon
 
 **`GeoMx/codes/3_geomx_SpatialDecon.ipynb`**
+
+`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/3_geomx_SpatialDecon.ipynb  my_output_dir`
+
 
 ### Context
 
@@ -165,33 +131,11 @@ Because GeoMx segments contain mixtures of cells, cell-type composition must be 
   How does including nuclei counts change the `beta` output? What do the rows and columns of `beta` represent?
 - [ ] Examine the `TIL_barplot()` output. Which cell types dominate each AOI type? Are proportions consistent within the same compartment?
 - [ ] In the `ComplexHeatmap`, columns are split by `celltype` (Glomeruli, Proximal Tubules, Distal Tubules) and annotated by `class` (DKD vs. normal). Do any cell types shift in abundance between disease and healthy samples?
-- [ ] Connect back to notebook 2: do the top DE genes in glomeruli correspond to known markers of the cell types showing the largest DKD-related abundance shifts?
+
 
 ### Reflect
 
-> - SpatialDecon uses non-negative least squares (NNLS). What are the key assumptions, and in what situations would it produce unreliable estimates?
 > - How would results change if you used a custom reference matrix derived from a published scRNA-seq dataset of the same tissue instead of the pre-built atlas?
 > - GeoMx deconvolution is entirely expression-based — it ignores the physical position of each segment. What spatial information does it miss that CosMx provides directly?
 > - When would you trust a high estimated abundance for a rare cell type, and when would you be skeptical?
 
-### 💡 Inspect Instead
-
-```r
-library(GeomxTools); library(SpatialDecon); library(tidyverse)
-
-geomx <- readRDS("GeoMx/results/tidy_geomx_obj.rds")
-geomx <- normalize(geomx, fromElt = "exprs", norm_method = "quant",
-                   desiredQuantile = 0.75, toElt = "q_norm")
-# From here, run derive_GeoMx_background() and spatialdecon() as in the notebook,
-# or load a saved beta matrix from GeoMx/results/ if available.
-```
-
----
-
-## Connecting the Analyses
-
-Once you have worked through all three notebooks, consider these integrative questions:
-
-> - The segment QC in notebook 1 uses nuclei count and area — how would you expect these to correlate with the cell-type proportions estimated in notebook 3?
-> - The DE analysis in notebook 2 identifies genes changing between DKD and normal. The deconvolution in notebook 3 identifies cell types changing in abundance. These are complementary views — how would you distinguish a gene changing because of cell-type composition shift vs. a genuine transcriptional response within a stable cell population?
-> - If you could add one more analysis step after these three notebooks, what would it be and why?

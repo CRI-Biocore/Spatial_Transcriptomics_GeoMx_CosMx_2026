@@ -6,36 +6,25 @@
 
 ## Dataset
 
-> 📌 **Placeholder** — Replace with your dataset description.
->
-> *Example fields to include:*
-> - Source / publication or data portal link
-> - Tissue type and condition (e.g., cancer subtype, disease stage)
-> - Number of FOVs, approximate cell count before and after QC
-> - Panel size (number of genes)
-> - File format and flat file structure notes
+For this section we use a dataset from FFPE human breast tissue, tested with the Whole-transcriptome CosMx panel as well as a 64 proteomics panel. The dataset was downloaded from [Bruker, multiomic data](https://brukerspatialbiology.com/products/cosmx-spatial-molecular-imager/ffpe-dataset/cosmx-human-multiomic-breast-dataset/)
+For this workshop, we did focus only in the transcriptomics panel results. 
+
 
 ---
 
 ## Quick Reference
 
+This folder includes key steps from a spatial sc-RNA-seq dataset. 
+
 | Topic | Notebook / Resource |
 |---|---|
-| Flat file ingestion — memory-efficient AnnData construction | `codes/1_cosmx_preprocessing_qc.ipynb` |
-| QC metrics — negative probes, counts, genes, area | `codes/1_cosmx_preprocessing_qc.ipynb` |
-| FOV-level QC checks | `codes/1_cosmx_preprocessing_qc.ipynb` |
-| Cell filtering and spatial visualization post-QC | `codes/1_cosmx_preprocessing_qc.ipynb` |
-| Spatial subsetting — FOV-based region selection | `codes/Subset_dataset.ipynb` |
-| MTX export for Seurat / SpatialCellChat | `codes/Subset_dataset.ipynb` |
-| Normalization, HVG selection, PCA, UMAP | `codes/2_cosmx_cell_annotation.ipynb` |
-| Leiden clustering at multiple resolutions | `codes/2_cosmx_cell_annotation.ipynb` |
-| CellTypist annotation — multi-model consensus | `codes/2_cosmx_cell_annotation.ipynb` |
-| Spatial scatter plots of annotated cell types | `codes/2_cosmx_cell_annotation.ipynb` |
-| CellPhoneDB v5 — basic and statistical methods | `codes/3_cosmx_cell_comunication.ipynb` |
-| Ligand–receptor scoring and visualization (ktplotspy) | `codes/3_cosmx_cell_comunication.ipynb` |
-| SpatialCellChat — full compute pipeline (HPC) | `codes/4_cosmx_spatial_cell_com.R` |
-| SpatialCellChat — object structure and preprocessing | `codes/4_cosmx_spatial_cell_com.ipynb` |
-| Spatially-aware communication — pathway and network plots | `codes/4_cosmx_spatial_cell_com.ipynb` |
+| AnnData obj from flat files, QC and filtering | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
+| Obj subsetting an MTX export | `CosMx/codes/Subset_dataset.ipynb` |
+| Normalization, dimension reduction, clustering and annotation  | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
+| Cell-cell communication with CellPhoneDB v5 | `CosMx/codes/3_cosmx_cell_comunication.ipynb` |
+| Spatially-aware Cell-cell communication with SpatialCellChat — compute (heavy, HPC script) | `CosMx/codes/4_cosmx_spatial_cell_com.R` |
+| Spatially-aware Cell-cell communication with SpatialCellChat — notebook with visualizations | `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` |
+
 
 ---
 
@@ -44,15 +33,11 @@
 | Notebook | Environment | Memory |
 |---|---|---|
 | Notebook 1, Subset | `scverse_spatial` (Python) | 100–180 GB |
-| Notebooks 2–3 | `scverse_spatial` (Python) | 50–100 GB |
+| Notebooks 2–3 | `scverse_spatial` (Python) | 50 GB |
 | Notebook 4 (visualization) | `seurat_spatial` (R) | 50 GB |
 | Notebook 4 (compute, `.R` script) | `seurat_spatial` (R) | 180 GB, interactive node |
 
-```bash
-# Launch Jupyter — replace {env_name} with scverse_spatial or seurat_spatial
-sbatch --mem=50GB ./launch_jupyter_conda.sh \
-  /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/{env_name}
-```
+
 
 Launch from the **workshop root folder** — all paths inside the notebooks are relative to that location.
 

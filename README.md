@@ -3,8 +3,6 @@
 
 This repository contains notebooks, conda environments, and pre-computed results for the **Spatial Transcriptomics Workshop** focused on Bruker technologies. The workshop covers quality control, normalization, differential expression, cell-type deconvolution, and cell–cell communication analysis across two complementary spatial platforms.
 
-Pre-computed results are provided for every step, so each notebook can be explored independently without re-running prior ones.
-
 ---
 
 ## Workshop description
@@ -18,7 +16,20 @@ This workshop introduces the fundamentals of Bruker Spatial Transcriptomics data
  - Cell-type deconvolution in GeoMx
  - Cell–cell communication analysis in spatial contexts - CosMx
 
- **WORKSHOP SLIDES** (link to slides)
+ **WORKSHOP SLIDES** [Box link](https://uchicago.box.com/s/6kjmu2s7x3hng24zrgseehgrr2arnkz1)
+
+ **Raw data** [Box link](https://uchicago.box.com/s/tp0j9x6bt8t6iqtpbqqbu6muaa4u9v4f)
+
+
+---
+
+
+## Self-Study Guides
+
+Step-by-step post-workshop guides, you can also navigate and check the notebooks independently, to check the step by step process without running anything or you can also run the notebooks in Randi. 
+
+- [`GeoMx`](GeoMx/README.md) — GeoMx QC, DE, and SpatialDecon
+- [`CosMx`](CosMx/README.md) — CosMx QC, annotation, CellPhoneDB, SpatialCellChat
 
 ---
 
@@ -28,56 +39,96 @@ A summary of all available notebooks and resources. Click any notebook link to j
 
 ### GeoMx
 
-ADD QUICK NOTES ON DATASET HERE
+For this example we use a dataset from FFPE and FF kidney tissue sections from diabetic and healthy individuals. 
+
 
 | Topic | Notebook / Resource |
 |---|---|
-| Data loading — DCC, PKC, annotation Excel | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
-| Segment QC — reads, saturation, nuclei, area, NTC | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
-| Probe QC — low ratio and Grubbs outlier filtering | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
-| Limit of Quantification (LOQ) and gene filtering | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
-| Q3 normalization and PCA | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
-| Differential expression — limma-voom + duplicateCorrelation | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
-| Volcano plot and DEG heatmaps | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
-| Background estimation from negative probes | `GeoMx/codes/3_geomx_SpatialDecon.ipynb` |
+| GeoMx obj from DCC, PKC data, QC and filtering with GeomxTools | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
+| Normalization, PCA and DE analysis with limma-voom | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
 | Cell-type deconvolution — SpatialDecon + Kidney HCA reference | `GeoMx/codes/3_geomx_SpatialDecon.ipynb` |
-| Cell abundance visualization — barplot and heatmap | `GeoMx/codes/3_geomx_SpatialDecon.ipynb` |
+
 
 ### CosMx
 
-ADD QUICK NOTES ON DATASET HERE
+For this section we use a dataset from FFPE human breast tissue, tested with the Whole-transcriptome CosMx panel. 
+
 
 | Topic | Notebook / Resource |
 |---|---|
-| Flat file ingestion — memory-efficient AnnData construction | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
-| QC metrics — negative probes, counts, area, FOV-level checks | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
-| Cell filtering and spatial visualization post-QC | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
-| Spatial subsetting — FOV-based region selection | `CosMx/codes/Subset_dataset.ipynb` |
-| MTX export for Seurat / SpatialCellChat | `CosMx/codes/Subset_dataset.ipynb` |
-| Normalization, HVG selection, PCA, UMAP | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
-| Leiden clustering at multiple resolutions | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
-| CellTypist annotation — multi-model consensus | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
-| Spatial scatter plots of cell types | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
-| CellPhoneDB v5 — basic and statistical methods | `CosMx/codes/3_cosmx_cell_comunication.ipynb` |
-| Ligand–receptor interaction scoring and visualization | `CosMx/codes/3_cosmx_cell_comunication.ipynb` |
-| SpatialCellChat — compute (heavy, HPC script) | `CosMx/codes/4_cosmx_spatial_cell_com.R` |
-| SpatialCellChat — object creation and visualization | `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` |
-| Spatially-aware communication — pathway and network plots | `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` |
+| AnnData obj from flat files, QC and filtering | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
+| Obj subsetting an MTX export | `CosMx/codes/Subset_dataset.ipynb` |
+| Normalization, dimension reduction, clustering and annotation  | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
+| Cell-cell communication with CellPhoneDB v5 | `CosMx/codes/3_cosmx_cell_comunication.ipynb` |
+| Spatially-aware Cell-cell communication with SpatialCellChat — compute (heavy, HPC script) | `CosMx/codes/4_cosmx_spatial_cell_com.R` |
+| Spatially-aware Cell-cell communication with SpatialCellChat — notebook with visualizations | `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` |
 
 ---
 
-## Self-Study Guides
 
-Step-by-step post-workshop guides with tasks, reflection questions, and inspect-instead code snippets for each notebook:
+## Running jupyter notebooks on the HPC (Randi)
 
-- [`GeoMx/README.md`](GeoMx/README.md) — GeoMx QC, DE, and SpatialDecon
-- [`CosMx/README.md`](CosMx/README.md) — CosMx QC, annotation, CellPhoneDB, SpatialCellChat
+The workshop folder, including datasets, codes and results, along with the conda environments is located at: 
+
+`/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2`
+
+All the notebooks can be rerun in Randi using the help script *_run_jupyter_notebook.sh_* provided in the main project folder. This script loads the correct libraries, runs the script and store the output and a copy of the notebook in a folder of your choice.
+
+`sbatch --mem={10G} ./run_jupyter_notebook.sh {conda_env_name} {notebook_workshop_relative_path}`
+
+Please create a folder (`out_dir`) for your usage where you would like to store the notebook and the output files. After running the script, it will create a notebook in the output directory and also a `results` subfolder, if not present already, with all output files.
+
+**Example, running 1_geomx_setup_qc.ipynb**
+```bash
+# Submit jupyter notebook job. 
+## Set output directory of your choice. 
+out_dir=$HOME/workshop 
+mkdir -p $out_dir 
+
+sbatch --mem=10G /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/run_jupyter_notebook.sh \
+  geomx_env GeoMx/codes/1_geomx_setup_qc.ipynb $out_dir
+
+```
+
+If there is any error, you will notice that the job is no longer running, and if a notebook was saved in the output directory, it will have a red header with a note on which chunk caused the error.
+
+
+**For experienced users only**
+
+There is also an option for running the notebook directly in Randi, You need to use VSCode and log in Randi as remote, as well as have the jupyter extension. You can easily use the conda environments directly and copy the notebooks or create new ones. If you encounter any issue join us for office hours or raise an issue in the repository for some help. 
+
+```bash
+# Submit a Jupyter job — replace {env_name} with the appropriate environment
+sbatch --mem=50GB ./launch_jupyter_conda.sh \
+  /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/{env_name}
+  ## Check err file, it will contain the URL to set the kernel. 
+  ## Within 
+```
+
+The script *_launch_jupyter_conda.sh_* will load the selected conda environment and set the libraries, you can set up the memory and partition too. After submitting the job, you will observe two files, an err and out files named jupyter_nb_*.err/out.  
+Wait a few seconds and check the content of the  jupyter_nb_*.err file, it will contain the URL that you can use to set the kernel.  
+
+
+Suggested memory per section:
+
+| Section | Environment | Memory |
+|---|---|---|
+| GeoMx notebooks 1–3 | `geomx_env` | 10 GB |
+| CosMx notebook 1 + Subset | `scverse_spatial` | 100–180 GB |
+| CosMx notebooks 2–3 | `scverse_spatial` | 50 GB |
+| CosMx notebook 4 (visualization) | `seurat_spatial` | 30 GB |
+
+| CosMx notebook 4 (compute, `.R` script) | `seurat_spatial` | 180 GB, use run_4_cosmx.sh script |
 
 ---
+
 
 ## Conda Environments
 
-Three environments are available on Randi. Activate with:
+
+Three environments are available on Randi. 
+The two helper scripts already load and add the correct path per conda environment when you ran a notebook, but you can also use them for your personal scripts using: 
+
 
 ```bash
 conda activate /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/{env_name}
@@ -89,40 +140,14 @@ conda activate /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_w
 | `scverse_spatial` | Python | CosMx notebooks 1–3 |
 | `seurat_spatial` | R | CosMx notebook 4 (SpatialCellChat) |
 
-To recreate any environment, you can find here the YAML files, they also contain notes on their installation.
 
-```bash
-conda env create -f conda_envs/{env_name}.yaml
-```
+If you want to recreate the environments, you can find in this repository the YAML files, they also contain notes on their installation.
 
-Additional R packages for the GeoMx environment can be installed with:
-```bash
-Rscript conda_envs/geomx_Rpackages_install.R
-```
+[conda environments YAMLs](conda_env/)
+
 
 ---
 
-## Launching Jupyter on the HPC (Randi)
-
-All notebooks use paths **relative to the workshop root folder**. Always launch Jupyter from that directory.
-
-```bash
-# Submit a Jupyter job — replace {env_name} with the appropriate environment
-sbatch --mem=50GB ./launch_jupyter_conda.sh \
-  /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/{env_name}
-```
-
-Suggested memory per section:
-
-| Section | Environment | Memory |
-|---|---|---|
-| GeoMx notebooks 1–3 | `geomx_env` | 10–50 GB |
-| CosMx notebook 1 + Subset | `scverse_spatial` | 100–180 GB |
-| CosMx notebooks 2–3 | `scverse_spatial` | 50–100 GB |
-| CosMx notebook 4 (visualization) | `seurat_spatial` | 50 GB |
-| CosMx notebook 4 (compute, `.R` script) | `seurat_spatial` | 180 GB, interactive node |
-
----
 
 ## Repository Structure
 
