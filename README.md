@@ -33,8 +33,7 @@ This workshop introduces the fundamentals of Bruker Spatial Transcriptomics data
 
 ## Repository navigation
 
-The repository is separated by technology for clarity. Independent jupyter notebooks related to each of the topics covered in the workshops are provided for you. The workshop slides contain the name of the notebook you might want to check out so you can follow along in the same order as we covered then.
-You can also navigate and inspect the notebooks independently, to check the step by step process without running anything. 
+The repository is separated by technology for clarity. Independent jupyter notebooks related to each of the topics covered in the workshops are provided for you to navigate and inspect, they include the step by step process without needing to run anything. The workshop slides contain the name of the notebook you might want to check out so you can follow along in the same order as we covered then.
 
 ### Technologies
 
