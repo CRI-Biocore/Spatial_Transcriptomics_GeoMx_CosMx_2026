@@ -6,7 +6,7 @@
 
 ## Dataset
 
-The dataset is the same used for the GeomxTools tutorial and is used throughout all the scripts for this workshop. FFPE and FF tissue sections from 4 diabetic kidney disease (DKD) and 3 healthy kidney sections [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/), processed using the GeoMx Digital Spatial Profiler (DSP) platform. The ROIs were selected to focus on tubules or glomeruli regions.
+The dataset is the same used for the GeomxTools tutorial and is used throughout all the scripts for this workshop. FFPE and FF tissue sections from 4 diabetic kidney disease (DKD) and 3 healthy kidney sections, processed using the GeoMx Digital Spatial Profiler (DSP) platform. The ROIs were selected to focus on tubules or glomeruli regions.
 
  - Glomeruli: Each ROI defined as glomeruli contains a single glomerulus.
 
@@ -17,30 +17,27 @@ For this workshop, we simulated 3 columns: The number of nuclei and X and Y coor
 
 ---
 
-## Quick Reference
+## Analysis Workflow
+
+Use the link to explore each step. The notebooks will show code, plots and notes to describe the process.
 
 | Topic | Notebook |
 |---|---|
-| GeoMx obj from DCC, PKC data, QC and filtering with GeomxTools | `GeoMx/codes/1_geomx_setup_qc.ipynb` |
-| Normalization, PCA and DE analysis with limma-voom | `GeoMx/codes/2_geomx_limma_norm_DE.ipynb` |
-| Cell-type deconvolution — SpatialDecon + Kidney HCA reference | `GeoMx/codes/3_geomx_SpatialDecon.ipynb` |
+| GeoMx obj from DCC, PKC data, QC and filtering with GeomxTools | [1_geomx_setup_qc.ipynb](GeoMx/codes/1_geomx_setup_qc.ipynb) |
+| Normalization, PCA and DE analysis with limma-voom | [2_geomx_limma_norm_DE.ipynb](GeoMx/codes/2_geomx_limma_norm_DE.ipynb) |
+| Cell-type deconvolution — SpatialDecon + Kidney HCA reference | [3_geomx_SpatialDecon.ipynb](GeoMx/codes/3_geomx_SpatialDecon.ipynb) |
 
 
 ---
 
-## Environment & Launch
+## Notes
 
-**Environment:** `geomx_env` (R-based)
-
-All the command lines to run each notebook were ran from the main workshop directory, update as needed. The notebooks for this section can be executed with **10G** of memory or less. 
+All the content for this section was created using the `geomx_env` (R-based) conda environment. All the analysis can be executed with **10G** of memory or less. If you want to try the code locally, this is possible. 
 
 
-## Notebook 1 — Dataset Setup & QC
+## Step 1 — Dataset Setup & QC
 
-**`GeoMx/codes/1_geomx_setup_qc.ipynb`**
-
-`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/1_geomx_setup_qc.ipynb  $my_output_dir` 
-
+[1_geomx_setup_qc.ipynb](GeoMx/codes/1_geomx_setup_qc.ipynb)
 
 ### Context
 
@@ -48,7 +45,7 @@ GeoMx data is loaded from three file types: per-segment DCC expression files, a 
 
 Key metadata columns kept in `meta_cols`: `Sample_ID`, `slide_name`, `region`, `segment`, `class`, `aoi`, `roi`, `area`, `nuclei`, `pathology`, `ROI_Coordinate_X`, `ROI_Coordinate_Y`.
 
-### Tasks
+### FAQS
 
 - [ ] Load the object and explore its structure. Understand the difference between `pData()` (segment metadata), `sData()` (extended protocol metadata including QC flags), and `fData()` (probe/gene metadata). What does each contain?
 - [ ] Review the segment QC parameters in `QC_params` and compare them to the commented defaults:
@@ -77,11 +74,9 @@ Key metadata columns kept in `meta_cols`: `Sample_ID`, `slide_name`, `region`, `
 
 ---
 
-## Notebook 2 — Normalization & Differential Expression
+## Step 2 — Normalization & Differential Expression
 
-**`GeoMx/codes/2_geomx_limma_norm_DE.ipynb`**
-
-`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/2_geomx_limma_norm_DE.ipynb  my_output_dir` 
+[2_geomx_limma_norm_DE.ipynb](codes/2_geomx_limma_norm_DE.ipynb)
 
 
 ### Context
@@ -108,11 +103,9 @@ The design matrix `~0 + CellType + class:CellType` produces interaction coeffici
 
 ---
 
-## Notebook 3 — Cell-Type Deconvolution with SpatialDecon
+## Step 3: Cell-Type Deconvolution with SpatialDecon
 
-**`GeoMx/codes/3_geomx_SpatialDecon.ipynb`**
-
-`sbatch --mem=10G run_jupyter_notebook.sh geomx_env GeoMx/codes/3_geomx_SpatialDecon.ipynb  my_output_dir`
+[3_geomx_SpatialDecon.ipynb](codes/3_geomx_SpatialDecon.ipynb)
 
 
 ### Context
@@ -139,3 +132,7 @@ Because GeoMx segments contain mixtures of cells, cell-type composition must be 
 > - GeoMx deconvolution is entirely expression-based — it ignores the physical position of each segment. What spatial information does it miss that CosMx provides directly?
 > - When would you trust a high estimated abundance for a rare cell type, and when would you be skeptical?
 
+## Relevant Links
+
+- [GeoMx Bioconductor Workflow](https://www.bioconductor.org/packages/release/workflows/vignettes/GeoMxWorkflows/inst/doc/GeomxTools_RNA-NGS_Analysis.html)
+- [SpatialDecon Bioconductor Vignette](https://bioconductor.org/packages/release/bioc/vignettes/SpatialDecon/inst/doc/SpatialDecon_vignette_NSCLC.html)
