@@ -7,45 +7,44 @@
 ## Dataset
 
 For this section we use a dataset from FFPE human breast tissue, tested with the Whole-transcriptome CosMx panel as well as a 64 proteomics panel. The dataset was downloaded from [Bruker, multiomic data](https://brukerspatialbiology.com/products/cosmx-spatial-molecular-imager/ffpe-dataset/cosmx-human-multiomic-breast-dataset/)
-For this workshop, we did focus only in the transcriptomics panel results. 
+For this workshop, we focus only on the transcriptomics panel results. 
 
 
 ---
 
-## Quick Reference
+## Analysis workflow
 
-This folder includes key steps from a spatial sc-RNA-seq dataset. 
+Use the link to explore each step. The notebooks will show code, plots and notes to describe the process.
+
+### Topics covered in the workshop
 
 | Topic | Notebook / Resource |
 |---|---|
-| AnnData obj from flat files, QC and filtering | `CosMx/codes/1_cosmx_preprocessing_qc.ipynb` |
-| Obj subsetting an MTX export | `CosMx/codes/Subset_dataset.ipynb` |
-| Normalization, dimension reduction, clustering and annotation  | `CosMx/codes/2_cosmx_cell_annotation.ipynb` |
-| Cell-cell communication with CellPhoneDB v5 | `CosMx/codes/3_cosmx_cell_comunication.ipynb` |
-| Spatially-aware Cell-cell communication with SpatialCellChat — compute (heavy, HPC script) | `CosMx/codes/4_cosmx_spatial_cell_com.R` |
-| Spatially-aware Cell-cell communication with SpatialCellChat — notebook with visualizations | `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` |
+| AnnData obj from flat files, QC and filtering | [1_cosmx_preprocessing_qc.ipynb](codes/1_cosmx_preprocessing_qc.ipynb) |
+| Normalization, dimension reduction, clustering and annotation  | [2_cosmx_cell_annotation.ipynb](codes/2_cosmx_cell_annotation.ipynb) |
+| Spatially-aware Cell-cell communication with SpatialCellChat — Visualizations | [4_cosmx_spatial_cell_com.ipynb](codes/4_cosmx_spatial_cell_com.ipynb) |
+
+
+### Additional resources
+
+| Topic | Notebook / Resource |
+|---|---|
+| Obj subsetting an MTX export | [Subset_dataset.ipynb](codes/Subset_dataset.ipynb) |
+| Cell-cell communication with CellPhoneDB v5 | [3_cosmx_cell_comunication.ipynb](codes/3_cosmx_cell_comunication.ipynb) |
+| Spatially-aware Cell-cell communication with SpatialCellChat — computation (heavy, HPC script) | [4_cosmx_spatial_cell_com.R](codes/4_cosmx_spatial_cell_com.R) |
+
+---
+
+## Notes
+
+All the content for this section was created using the  `scverse_spatial` (python-based) and the `seurat_spatial` (R-based) conda environments. All the analysis require larger memory, try with at least **100GB**. If using Randi, don't forget to use the `tier2q` partition.
 
 
 ---
 
-## Environments & Launch
+## Step 1 — Preprocessing & QC
 
-| Notebook | Environment | Memory |
-|---|---|---|
-| Notebook 1, Subset | `scverse_spatial` (Python) | 100–180 GB |
-| Notebooks 2–3 | `scverse_spatial` (Python) | 50 GB |
-| Notebook 4 (visualization) | `seurat_spatial` (R) | 50 GB |
-| Notebook 4 (compute, `.R` script) | `seurat_spatial` (R) | 180 GB, interactive node |
-
-
-
-Launch from the **workshop root folder** — all paths inside the notebooks are relative to that location.
-
----
-
-## Notebook 1 — Ingestion, Preprocessing & QC
-
-**`CosMx/codes/1_cosmx_preprocessing_qc.ipynb`** · `scverse_spatial` · ~180 GB
+[1_cosmx_preprocessing_qc.ipynb](codes/1_cosmx_preprocessing_qc.ipynb)
 
 ### Context
 
@@ -53,16 +52,9 @@ CosMx flat files are loaded manually: the expression matrix (`*exprMat_file.csv.
 
 ### Tasks
 
-- [ ] Trace the memory-efficient loading strategy: the dense expression DataFrame is converted to sparse format and deleted (`del expr; gc.collect()`) *before* loading the metadata file. Why does this order matter for a dataset of this size (384 FOVs)?
-- [ ] Verify that `obsm["spatial"]` stores global pixel coordinates, not FOV-local ones. Print the coordinate range — what are the approximate x and y extents of the slide?
+- [ ] Inspect the multiple coordinates: What is the difference between local and global coordinates.
 - [ ] Identify the negative probe columns (names contain `"NegPrb"`). `sc.pp.calculate_qc_metrics()` is called with `qc_vars=["negative_probe"]`, adding `pct_counts_negative_probe` to `adata.obs`. Why is this metric preferred over mitochondrial gene percentage for CosMx data?
 - [ ] Review the FOV-level QC plots (average negative probe signal and average counts per FOV). What is the purpose of this step before applying cell-level filters?
-- [ ] Review the filtering thresholds and the per-filter removal counts printed before applying the combined mask:
-  - `MIN_COUNTS = 200`, `MAX_COUNTS = 7500`
-  - `MIN_GENES = 100`
-  - `MAX_NEG_PCT = 1.0%`
-  - `MIN_AREA = 50`, `MAX_AREA = 15000`
-
   Which individual filter removes the most cells? What does `MAX_COUNTS = 7500` guard against?
 - [ ] Compare the spatial scatter plots of `total_counts` and `pct_counts_negative_probe` before and after filtering. Is the noise spatially random, or concentrated in particular regions or FOVs?
 - [ ] After filtering, negative probe columns are removed from the feature set. What are the final cell and gene counts saved to `CosMx/results/BreastCancer_filtered.h5ad`?
@@ -74,59 +66,19 @@ CosMx flat files are loaded manually: the expression matrix (`*exprMat_file.csv.
 > - Why store global pixel coordinates in `obsm["spatial"]` rather than FOV-local coordinates?
 > - How would you adjust `MIN_COUNTS` for a smaller targeted panel (e.g., 1,000 genes) vs. this larger panel?
 
-### 💡 Inspect Instead
 
-```python
-import scanpy as sc
-adata = sc.read_h5ad("CosMx/results/BreastCancer_filtered.h5ad")
-print(adata)
-adata.obs[["total_counts", "n_genes_by_counts",
-           "pct_counts_negative_probe", "Area"]].describe()
-```
 
 ---
 
-## Notebook 1b — Subsetting the Dataset
+## Step 2 — Clustering & Cell Type Annotation
 
-**`CosMx/codes/Subset_dataset.ipynb`** · `scverse_spatial` · ~100 GB
 
-> ⚠️ **Runs after notebook 1.** Reads `BreastCancer_filtered.h5ad` and produces the subset used by all downstream notebooks. Subset files are already in `CosMx/results/` — you do not need to rerun this unless you want to define a different region.
-
-### Context
-
-The full filtered dataset (384 FOVs) is too large for interactive annotation and communication analysis. This notebook selects a spatial rectangle targeting ~20,000–30,000 cells by identifying whole FOVs within defined coordinate bounds. The subset is saved as an `h5ad` file and also exported in 10x-compatible MTX format for loading into Seurat in the SpatialCellChat workflow.
-
-### Tasks
-
-- [ ] Understand the subsetting strategy: whole FOVs within a spatial rectangle are selected rather than randomly sampling individual cells. Why is FOV-based selection preferable to random cell sampling for spatial analysis?
-- [ ] The coordinate bounds select the middle third in x and a central band in y:
-  ```python
-  x: [x_min + 1/3*(x_max-x_min),  x_min + 2/3*(x_max-x_min)]
-  y: [y_min + 2/9*(y_max-y_min),  y_min + 6/9*(y_max-y_min)]
-  ```
-  Look at the spatial scatter plot of retained FOVs. Does the selected region cover a representative area of the tissue?
-- [ ] Check `subset_adata` after subsetting: how many cells and FOVs are retained? Is it within the 20,000–30,000 cell target?
-- [ ] Four files are written to `CosMx/results/Subset_MM/`: `matrix.mtx`, `barcodes.tsv`, `features.tsv`, `metadata.csv`. The count matrix is transposed (`.X.T`) for Seurat compatibility — why does Seurat expect genes × cells rather than cells × genes?
-
-### 💡 Inspect Instead
-
-```python
-import scanpy as sc
-subset = sc.read_h5ad("CosMx/results/BreastCancer_subset.h5ad")
-print(f"Cells : {subset.n_obs:,}")
-print(f"Genes : {subset.n_vars:,}")
-print(f"FOVs  : {subset.obs['fov'].nunique()}")
-```
-
----
-
-## Notebook 2 — Clustering & Cell Type Annotation
-
-**`CosMx/codes/2_cosmx_cell_annotation.ipynb`** · `scverse_spatial` · ~50 GB
+[2_cosmx_cell_annotation.ipynb](codes/2_cosmx_cell_annotation.ipynb)
+(`scverse_spatial` · ~50 GB)
 
 ### Context
 
-Starting from `BreastCancer_subset.h5ad` (31,999 cells), this notebook follows a standard scanpy workflow: normalization to the median library size, HVG selection (top 3,000 genes, `seurat_v3` flavor on raw counts), PCA (50 components, `arpack` solver), neighbor graph (15 neighbors, 17 PCs), UMAP, and Leiden clustering at resolutions 0.2, 0.4, and 0.6.
+Starting from `BreastCancer_subset.h5ad` (31,999 cells), this notebook follows a standard scanpy workflow: normalization to the median library size, HVG selection (top 3,000 genes, `seurat_v3`), PCA, neighbor graph (15 neighbors, 17 PCs), UMAP, and Leiden clustering at resolutions 0.2, 0.4, and 0.6.
 
 Annotation uses **CellTypist** with three pre-downloaded models from `data/celltypist_models/`:
 - `Cells_Adult_Breast.pkl` — breast-specific cell types
@@ -137,17 +89,13 @@ All three are run with `majority_voting=True` over `leiden_0.4` clusters. A cons
 
 ### Tasks
 
-- [ ] Review the normalization: `sc.pp.normalize_total()` uses `target_sum = median_counts` (the subset's median library size) rather than the conventional 10,000. Why is the median library size a better target for this probe-based dataset?
-- [ ] Note that HVGs are computed with `flavor="seurat_v3"` on the raw `"counts"` layer. Why does this flavor specifically require raw counts?
 - [ ] Examine the elbow plot from `sc.pl.pca_variance_ratio()`. The notebook uses `n_pcs = 17` — where is the elbow, and does the choice seem well-supported?
 - [ ] Look at the UMAP colored by `Mean.PanCK`, `Mean.CD68`, `Mean.CD45`, and `Mean.DAPI` (morphological markers from segmentation). Which populations do these highlight before any clustering label is applied?
 - [ ] Compare spatial scatter plots for Leiden resolutions 0.2, 0.4, and 0.6. Which resolution produces the most spatially coherent clusters? The notebook selects `leiden_0.4` — do you agree?
-- [ ] Review the `rank_genes_groups` dotplot for `leiden_0.4` (Wilcoxon test on raw counts). Do the top 5 markers per cluster give an intuition for cell identity before running CellTypist?
-- [ ] Walk through the three CellTypist runs. Prediction probability maxima per cell are stored as confidence scores. Why track confidence alongside predicted labels?
+- [ ] Review the `rank_genes_groups` dotplot for `leiden_0.4`. Do the top 5 markers per cluster give an intuition for cell identity before running CellTypist?
 - [ ] Inspect `consensus_df` and `conf_summary`: most-frequent label and mean confidence per cluster per model. The final annotation uses `Immune_All_High` labels for most clusters but switches to `Cells_Adult_Breast` for clusters 0, 2, 3, and 7 (luminal epithelial). Why are two models needed?
 - [ ] Review the luminal marker dotplot (`ESR1`, `PGR`, `FOXA1`, `KRT8`, `MKI67`, `TOP2A`, `KRT5`, `KRT14`, etc.) used to characterize epithelial clusters before finalizing annotation.
 - [ ] Verify the `final_annotation` spatial scatter plot. Do luminal, immune, and stromal populations occupy distinct tissue regions?
-- [ ] Check outputs saved to `CosMx/results/`: `BreastCancer_subset_annotated.h5ad` and the `Subset_MM/` tables (`spatial_coordinates.csv`, `pca_embeddings.csv`, `umap_embeddings.csv`, `metadata_annotation.csv`).
 
 ### Reflect
 
@@ -156,21 +104,14 @@ All three are run with `majority_voting=True` over `leiden_0.4` clusters. A cons
 > - The luminal marker dotplot suggests clusters 0, 2, 3, and 7 could be further subdivided. What biological distinction would you look for to justify splitting them?
 > - Does the spatial organization of `final_annotation` support the expression-derived clustering, or do you see unexpected mismatches?
 
-### 💡 Inspect Instead
-
-```python
-import scanpy as sc, squidpy as sq
-
-adata = sc.read_h5ad("CosMx/results/BreastCancer_subset_annotated.h5ad")
-print(adata.obs["final_annotation"].value_counts())
-sq.pl.spatial_scatter(adata, color="final_annotation", shape=None, size=0.5)
-```
 
 ---
 
-## Notebook 3 — Cell–Cell Communication (Expression-Based)
+## Step 3 — Cell–Cell Communication (Expression-Based)
 
-**`CosMx/codes/3_cosmx_cell_comunication.ipynb`** · `scverse_spatial` · ~100 GB
+
+[3_cosmx_cell_comunication.ipynb](codes/3_cosmx_cell_comunication.ipynb)
+**``** · `scverse_spatial` · ~100 GB
 
 ### Context
 
@@ -290,3 +231,13 @@ Once you have worked through all five notebooks, consider these integrative ques
 > - The annotation in notebook 2 is based on expression clusters. Does the spatial organization of those clusters in notebook 4's `spatialDimPlot` add confidence in the annotation, or raise any concerns?
 > - The `Subset_dataset` notebook selects a spatial rectangle from the slide. How would you assess whether the interactions and cell-type compositions you find are representative of the whole tissue?
 > - If you were to design a follow-up experiment based on the most compelling interaction found in notebook 4, what validation assay would you choose?
+
+## Relevant Links
+
+- [CosMx Best Practices — Bruker](https://brukerspatialbiology.com/products/cosmx-spatial-molecular-imager/cosmx-smi-best-practices/)
+- [SpatialCellChat Tutorial](https://htmlpreview.github.io/?https://github.com/jinworks/SpatialCellChat/blob/master/tutorial/SpatialCellChat_analysis_of_spatial_transcriptomics_data.html)
+- [CellChat FAQ — Spatial Data](https://htmlpreview.github.io/?https://github.com/jinworks/CellChat/blob/master/tutorial/FAQ_on_applying_CellChat_to_spatial_transcriptomics_data.html)
+- [CellPhoneDB Documentation](https://github.com/ventolab/CellphoneDB)
+- [CellTypist](https://www.celltypist.org/)
+
+
