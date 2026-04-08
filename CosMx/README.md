@@ -37,7 +37,7 @@ Use the link to explore each step. The notebooks will show code, plots and notes
 
 ## Notes
 
-All the content for this section was created using the  `scverse_spatial` (python-based) and the `seurat_spatial` (R-based) conda environments. All the analysis require larger memory, try with at least **100GB**. If using Randi, don't forget to use the `tier2q` partition.
+All the content for this section was created using the  `scverse_spatial` (python-based) and the `seurat_spatial` (R-based) conda environments. All the analysis require larger memory, try with at least **100GB**. If using Randi, don't forget to use the `tier2q` partition. 
 
 
 ---
@@ -57,15 +57,11 @@ CosMx flat files are loaded manually: the expression matrix (`*exprMat_file.csv.
 - [ ] Review the FOV-level QC plots (average negative probe signal and average counts per FOV). What is the purpose of this step before applying cell-level filters?
   Which individual filter removes the most cells? What does `MAX_COUNTS = 7500` guard against?
 - [ ] Compare the spatial scatter plots of `total_counts` and `pct_counts_negative_probe` before and after filtering. Is the noise spatially random, or concentrated in particular regions or FOVs?
-- [ ] After filtering, negative probe columns are removed from the feature set. What are the final cell and gene counts saved to `CosMx/results/BreastCancer_filtered.h5ad`?
 
 ### Reflect
 
 > - Why is `pct_counts_negative_probe` a better noise metric here than mitochondrial gene percentage?
 > - What biological or tissue-specific considerations should guide `MIN_AREA` and `MAX_AREA`? How would these change for a tissue with very large cells (e.g., neurons)?
-> - Why store global pixel coordinates in `obsm["spatial"]` rather than FOV-local coordinates?
-> - How would you adjust `MIN_COUNTS` for a smaller targeted panel (e.g., 1,000 genes) vs. this larger panel?
-
 
 
 ---
@@ -74,7 +70,6 @@ CosMx flat files are loaded manually: the expression matrix (`*exprMat_file.csv.
 
 
 [2_cosmx_cell_annotation.ipynb](codes/2_cosmx_cell_annotation.ipynb)
-(`scverse_spatial` · ~50 GB)
 
 ### Context
 
@@ -100,7 +95,6 @@ All three are run with `majority_voting=True` over `leiden_0.4` clusters. A cons
 ### Reflect
 
 > - The notebook uses three CellTypist models and builds a consensus. What are the risks of using only one model for a complex tissue like breast cancer?
-> - Majority voting at the cluster level differs from per-cell annotation. When would per-cell annotation be preferable, and when would it be less reliable?
 > - The luminal marker dotplot suggests clusters 0, 2, 3, and 7 could be further subdivided. What biological distinction would you look for to justify splitting them?
 > - Does the spatial organization of `final_annotation` support the expression-derived clustering, or do you see unexpected mismatches?
 
@@ -111,7 +105,6 @@ All three are run with `majority_voting=True` over `leiden_0.4` clusters. A cons
 
 
 [3_cosmx_cell_comunication.ipynb](codes/3_cosmx_cell_comunication.ipynb)
-**``** · `scverse_spatial` · ~100 GB
 
 ### Context
 
@@ -121,116 +114,56 @@ This analysis intentionally ignores spatial coordinates — it establishes a bas
 
 ### Tasks
 
-- [ ] Follow the data preparation: `adata.layers["lognorm"]` is promoted to `X` in a new `AnnData` before saving as the CellPhoneDB counts input. Why does CellPhoneDB require lognorm rather than raw counts?
-- [ ] Check the metadata TSV: exactly two columns — `barcode_sample` (cell ID) and `cell_type` (`final_annotation`). CellPhoneDB groups cells by `cell_type` when computing mean expression per pair.
-- [ ] The **basic method** (`cpdb_analysis_method.call()`) runs without permutation testing. Key parameters: `threshold = 0.1`, `threads = 5`, `score_interactions = True`. What does the interaction score add beyond the mean expression value?
-- [ ] The **statistical method** (`cpdb_statistical_analysis_method.call()`) uses `iterations = 1000` label-shuffling permutations. The p-value is the fraction of shuffled means ≥ the observed mean. What biological assumption does this null model make?
 - [ ] Explore the three result tables: `means`, `significant_means` (p < 0.05), and `interaction_scores`. How many interactions survive the significance filter? Which cell-type pairs have the most significant interactions?
-- [ ] Use `kpy.plot_cpdb_heatmap()` for a global view of interaction counts per cell-type pair. Which pairs are most communicative?
 - [ ] The dot plot (`kpy.plot_cpdb()`) is filtered to VEGF family genes for endothelial and luminal cell-type pairs. Do you see evidence of VEGF signaling between expected partners?
 - [ ] Note the key limitation: CellPhoneDB does not know which cells are physically adjacent. High-scoring pairs here may never co-localize in the tissue. Keep this in mind when comparing to notebook 4.
 
 ### Reflect
 
-> - What is the practical difference between the basic and statistical CellPhoneDB methods? When would you use each?
-> - The `threshold = 0.1` parameter excludes genes expressed in < 10% of a cell type's cells. How would changing this affect the number of testable interactions?
+> - The `threshold = 0.1` parameter excludes genes expressed in < 10% of a cell type's cells. How would changing this affect the number of estable interactions?
 > - If an interaction scores highly here but is absent from notebook 4, what are the possible biological and technical explanations?
 > - CellPhoneDB treats all cells of a given type as one pool regardless of tissue location. What biology might this miss in a heterogeneous tumor?
 
-### 💡 Inspect Instead
-
-```python
-import pandas as pd
-
-results_dir = "CosMx/results/CellPhoneDB/"
-sig_means = pd.read_csv(f"{results_dir}significant_means.txt", sep="\t")
-scores    = pd.read_csv(f"{results_dir}interaction_scores.txt", sep="\t")
-
-print(f"Significant interactions: {sig_means.shape[0]}")
-scores.sort_values("interaction_score", ascending=False).head(10)
-```
 
 ---
 
-## Notebook 4 — Spatially-Aware Cell–Cell Communication
+## Step 4 — Spatially-Aware Cell–Cell Communication
 
-**Visualization:** `CosMx/codes/4_cosmx_spatial_cell_com.ipynb` · `seurat_spatial` · ~50 GB  
-**Compute:** `CosMx/codes/4_cosmx_spatial_cell_com.R` · `seurat_spatial` · 180 GB, interactive node
+**Visualization:** [4_cosmx_spatial_cell_com.ipynb](codes/4_cosmx_spatial_cell_com.ipynb) 
+
+**Compute:** [4_cosmx_spatial_cell_com.R](codes/4_cosmx_spatial_cell_com.R)
 
 ### Context and Workflow
 
 **SpatialCellChat** infers cell–cell communication constrained by physical proximity. Because the compute steps are memory-intensive and slow, the workflow is intentionally split:
 
-| Task | Where to run |
-|---|---|
-| Build Seurat object, create SpatialCellChat object, identify spatially over-expressed genes and interactions, compute communication probabilities, filter, save `.rds` | **`.R` script** on an HPC interactive node |
-| Load the saved `.rds` and generate all visualizations | **Jupyter notebook** with the `seurat_spatial` R kernel |
 
-The pre-computed SpatialCellChat object is already at `CosMx/results/SpatialCellChat/SpatialCellChat.rds`.
-
-### Running the Compute Script (optional)
-
-```bash
-# Interactive node — no job time limit to worry about
-srun --time=04:00:00 --mem=180G -p tier2q --pty bash -l
-
-conda activate /gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2/conda_envs/seurat_spatial
-Rscript CosMx/codes/4_cosmx_spatial_cell_com.R
-```
-
-The script prints timestamps at each major step so you can track progress.
-
-### Tasks — Understanding the Compute Script
+### Tasks
 
 Work through the logic of `4_cosmx_spatial_cell_com.R` even if you do not rerun it:
 
-- [ ] The script loads MTX files from `CosMx/results/Subset_MM/` and builds a Seurat object. A spatial filter (`CenterX_global_px > 35000 & CenterY_global_px < 98000`) keeps a focused sub-region. Why is an additional spatial filter applied here on top of the subset from notebook 1b?
+
 - [ ] Understand the coordinate conversion: CosMx pixel coordinates are converted to micrometers using `conversion.factor = 0.12028` (120.28 nm/pixel). The tolerance factor `tol` is set to half the minimum centroid-to-centroid distance. According to the SpatialCellChat FAQ, why is an exact tolerance factor less critical here than it might seem?
-- [ ] The `CellChatDB.human` database is filtered to **Cell-Cell Contact** interactions only before assigning to `chat@DB`. What would you change to also capture secreted or ECM-receptor signaling?
-- [ ] `identifyOverExpressedGenes()` uses `selection.method = "meringue"` to identify spatially variable genes. How does this differ from a standard Wilcoxon DE test, and why is spatial variability a more appropriate criterion here?
-- [ ] `computeCommunProb()` is called with `distance.use = TRUE`, `scale.distance = 1`, `interaction.range = 250` µm, and `contact.range = 10` µm. What is the biological rationale for these two range parameters?
-- [ ] Two filtering steps follow: `filterProbability()` removes non-significant links, and `filterCommunication(min.links = 10, min.cells.sr = 10)` removes interactions supported by too few cells. Why are both filters needed?
-- [ ] `computeAvgCommunProb()` uses `nboot = 100` permutations to compute cell-type-level average communication. The significant interactions table is written to `CosMx/results/SpatialCellChat/cell_cell_communication.csv`.
-
-### Tasks — Visualization in the Jupyter Notebook
-
-- [ ] Load the saved SpatialCellChat object. Check `dim(chat@net$prob)` (cell types × cell types × interactions) and `dim(chat@data.signaling)` to understand the object structure.
-- [ ] Run `aggregateNet(chat)` to summarize the network and `computeCommunProbPathway(chat)` to group interactions by signaling pathway. What pathways are in `chat@netP$pathways`?
-- [ ] Use `spatialDimPlot()` to visualize cell-type assignments on tissue coordinates. Does the spatial layout match the annotation from notebook 2?
-- [ ] Use `spatialFeaturePlot()` for a pathway of interest (e.g., `pathway.show = "NOTCH"`). Does the signal localize to a specific tissue region or cell-type boundary?
-- [ ] Load `cell_cell_communication.csv` and compare significant interactions to the CellPhoneDB results from notebook 3. Which appear in both? Which are unique to SpatialCellChat? What might a discrepancy indicate?
+- [ ] Compare significant interactions to the CellPhoneDB results from step 3. How similar does the amount of LR interactions change between cell types pairs.
 
 ### Reflect
 
 > - SpatialCellChat requires physical proximity between sender and receiver. What signaling categories would it systematically miss compared to CellPhoneDB?
-> - The analysis uses only the Cell-Cell Contact database subset. How would results change if you included Secreted Signaling?
 > - `interaction.range = 250` µm approximates paracrine signaling. How would you determine an appropriate range for a different tissue or hypothesis?
 > - An interaction is significant in CellPhoneDB (notebook 3) but absent from SpatialCellChat. List the most plausible biological and technical explanations.
 
-### 💡 Inspect Instead
-
-```r
-library(SpatialCellChat); library(dplyr)
-
-chat <- readRDS("CosMx/results/SpatialCellChat/SpatialCellChat.rds")
-chat <- aggregateNet(chat)
-
-comm <- read.csv("CosMx/results/SpatialCellChat/cell_cell_communication.csv")
-comm %>% arrange(desc(prob)) %>% head(20)
-
-spatialDimPlot(chat, group.by = "final_annotation", point.size = 1)
-```
 
 ---
 
 ## Connecting the Analyses
 
-Once you have worked through all five notebooks, consider these integrative questions:
+Once you have worked through all the content, consider these integrative questions:
 
 > - CellPhoneDB (notebook 3) and SpatialCellChat (notebook 4) both predict interactions between the same annotated cell types. What does it mean biologically when an interaction is found by both? When found by only one?
 > - The annotation in notebook 2 is based on expression clusters. Does the spatial organization of those clusters in notebook 4's `spatialDimPlot` add confidence in the annotation, or raise any concerns?
-> - The `Subset_dataset` notebook selects a spatial rectangle from the slide. How would you assess whether the interactions and cell-type compositions you find are representative of the whole tissue?
 > - If you were to design a follow-up experiment based on the most compelling interaction found in notebook 4, what validation assay would you choose?
+
+----
 
 ## Relevant Links
 
