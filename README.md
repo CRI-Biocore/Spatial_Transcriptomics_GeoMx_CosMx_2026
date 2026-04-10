@@ -18,12 +18,12 @@ This workshop introduces the fundamentals of Bruker Spatial Transcriptomics data
 
  ---
 
-## Additional resources
+## Workshop resources
 
- **Workwhop slides** [Box link](https://uchicago.box.com/s/6kjmu2s7x3hng24zrgseehgrr2arnkz1)
+ **Workshop slides** [Box link](https://uchicago.box.com/s/6kjmu2s7x3hng24zrgseehgrr2arnkz1)
 
  **Raw data** [Box link](https://uchicago.box.com/s/tp0j9x6bt8t6iqtpbqqbu6muaa4u9v4f)
-  Also within workshop folder.
+  Also within workshop folder in Randi.
 
  **Workshop folder in Randi** *_`/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2`_*
 
