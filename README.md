@@ -20,6 +20,9 @@ This workshop introduces the fundamentals of Bruker Spatial Transcriptomics data
 
 ## Workshop resources
 
+
+**Recording** [Recording](https://cri.uchicago.edu/wp-content/uploads/2026/04/DVCruz-Rcording-of-Spatial-Transcriptomics-Seminar_April2026.mp4)
+
  **Workshop slides** [Box link](https://uchicago.box.com/s/6kjmu2s7x3hng24zrgseehgrr2arnkz1)
 
  **Raw data** [Box link](https://uchicago.box.com/s/tp0j9x6bt8t6iqtpbqqbu6muaa4u9v4f)
@@ -27,6 +30,8 @@ This workshop introduces the fundamentals of Bruker Spatial Transcriptomics data
 
  **Workshop folder in Randi** *_`/gpfs/data/biocore-workshop/spatial_transcriptomics_bruker_2026_workshop2`_*
 
+To access content from this and other CRI seminars visit: 
+[CRI Seminar series](https://cri.uchicago.edu/seminar-series/)
 
 ---
 
